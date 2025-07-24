@@ -77,17 +77,17 @@ class Track(core.Track):
     Attributes:
         audio_path (str): track audio path
         beats_path (str): beat annotation path
-        chords_path (str or None): chord annotation path (None if not available)
-        keys_path (str or None): key annotation path (None if not available)
-        sections_path (str or None): sections annotation path (None if not available)
+        chords_path (str): chord annotation path
+        keys_path (str): key annotation path
+        sections_path (str): sections annotation path
         title (str): title of the track
         track_id (str): track id
 
     Cached Properties:
         beats (BeatData): human-labeled beat annotations
-        chords (ChordData or None): human-labeled chord annotations (None if not available)
-        key (KeyData or None): local key annotations (None if not available)
-        sections (SectionData or None): section annotations (None if not available)
+        chords (ChordData): human-labeled chord annotations
+        key (KeyData): local key annotations
+        sections (SectionData): section annotations
 
     """
 
@@ -95,18 +95,13 @@ class Track(core.Track):
         super().__init__(track_id, data_home, dataset_name, index, metadata)
 
         self.beats_path = self.get_path("beat")
-        self.audio_path = self.get_path("audio")
-        
-        # Optional annotation paths - only set if they exist in the index
-        self.chords_path = self.get_path("chords") if "chords" in self._track_paths else None
-        self.keys_path = self.get_path("keys") if "keys" in self._track_paths else None
-        self.sections_path = self.get_path("sections") if "sections" in self._track_paths else None
+        self.chords_path = self.get_path("chords")
+        self.keys_path = self.get_path("keys")
+        self.sections_path = self.get_path("sections")
 
-        # Use audio path for title if sections path is not available
-        if self.sections_path:
-            self.title = os.path.basename(self._track_paths["sections"][0]).split(".")[0]
-        else:
-            self.title = os.path.basename(self._track_paths["audio"][0]).split(".")[0]
+        self.audio_path = self.get_path("audio")
+
+        self.title = os.path.basename(self._track_paths["sections"][0]).split(".")[0]
 
     @core.cached_property
     def beats(self) -> Optional[annotations.BeatData]:
@@ -114,20 +109,14 @@ class Track(core.Track):
 
     @core.cached_property
     def chords(self) -> Optional[annotations.ChordData]:
-        if self.chords_path is None:
-            return None
         return load_chords(self.chords_path)
 
     @core.cached_property
     def key(self) -> Optional[annotations.KeyData]:
-        if self.keys_path is None:
-            return None
         return load_key(self.keys_path)
 
     @core.cached_property
     def sections(self) -> Optional[annotations.SectionData]:
-        if self.sections_path is None:
-            return None
         return load_sections(self.sections_path)
 
     @property
